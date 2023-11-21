@@ -1,0 +1,73 @@
+definitions:
+  api.ErrorResponse:
+    properties:
+      msg:
+        type: string
+    type: object
+  blacklist.AddIPToBlacklistRequest:
+    properties:
+      ip:
+        type: string
+    type: object
+  blacklist.Response:
+    properties:
+      msg:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Web Application Firewall By Gin
+  license: {}
+  title: WAF
+  version: v1.0
+paths:
+  /blacklist:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: IP信息
+        in: body
+        name: AddIPToBlacklistRequest
+        required: true
+        schema:
+          $ref: '#/definitions/blacklist.AddIPToBlacklistRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/blacklist.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: 将IP移除黑名单
+      tags:
+      - Auth
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: IP信息
+        in: body
+        name: AddIPToBlacklistRequest
+        required: true
+        schema:
+          $ref: '#/definitions/blacklist.AddIPToBlacklistRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/blacklist.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: 添加IP至黑名单
+      tags:
+      - Auth
+swagger: "2.0"

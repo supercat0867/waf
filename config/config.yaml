@@ -1,0 +1,25 @@
+port: 8080
+
+proxyServer: "http://localhost:80"
+
+redis:
+  address: "localhost:6379"
+  password: ""
+  database: 0
+
+rateLimiterMode: 1
+
+rateLimiter:
+  tokenBucket:
+    maxToken: 10
+    tokenPerSecond: 10
+  leakyBucket:
+    capacity: 4
+    leakyPerSecond: 1
+  fixedWindow:
+    windowSize: 2
+    maxRequests: 5
+  slideWindow:
+    windowSize: 2
+    maxRequests: 5
+
