@@ -4,14 +4,17 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"log"
-	blacklist2 "waf/api/blacklist"
+	blacklistApi "waf/api/blacklist"
+	whitelistApi "waf/api/whitelist"
 	cfg "waf/config"
 	"waf/domain/blacklist"
+	"waf/domain/whitelist"
 	"waf/utils/database"
 )
 
 type Databases struct {
 	BlacklistRepository *blacklist.Repository
+	WhitelistRepository *whitelist.Repository
 }
 
 var AppConfig cfg.Config
@@ -27,22 +30,32 @@ func CreateDBs() *Databases {
 
 	return &Databases{
 		BlacklistRepository: blacklist.NewBlacklistRepository(rdb),
+		WhitelistRepository: whitelist.NewWhitelistRepository(rdb),
 	}
 
 }
 
-// RegisterHandlers 注册所有控制器
+// RegisterHandlers 注册控制器
 func RegisterHandlers(r *gin.Engine) {
 	dbs := *CreateDBs()
-	RegisterBlackLisHandlers(r, dbs)
-
+	RegisterBlackListHandlers(r, dbs)
+	RegisterWhiteListHandlers(r, dbs)
 }
 
-// RegisterBlackLisHandlers 注册黑名单控制器
-func RegisterBlackLisHandlers(r *gin.Engine, dbs Databases) {
+// RegisterBlackListHandlers 注册黑名单控制器
+func RegisterBlackListHandlers(r *gin.Engine, dbs Databases) {
 	blacklistService := blacklist.NewBlacklistService(*dbs.BlacklistRepository, context.Background())
-	blacklistController := blacklist2.NewBlacklistController(blacklistService)
+	blacklistController := blacklistApi.NewBlacklistController(blacklistService)
 	blacklistGroup := r.Group("/blacklist")
 	blacklistGroup.POST("", blacklistController.AddIPToBlacklist)
 	blacklistGroup.DELETE("", blacklistController.RemoveIPFromBlacklist)
+}
+
+// RegisterWhiteListHandlers 注册白名单控制器
+func RegisterWhiteListHandlers(r *gin.Engine, dbs Databases) {
+	whitelistService := whitelist.NewWhitelistService(*dbs.WhitelistRepository, context.Background())
+	whitelistController := whitelistApi.NewWhitelistController(whitelistService)
+	whitelistGroup := r.Group("/whitelist")
+	whitelistGroup.POST("", whitelistController.AddIPToWhitelist)
+	whitelistGroup.DELETE("", whitelistController.RemoveIPFromWhitelist)
 }

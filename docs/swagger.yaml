@@ -14,6 +14,16 @@ definitions:
       msg:
         type: string
     type: object
+  whitelist.AddIPToWhitelistRequest:
+    properties:
+      ip:
+        type: string
+    type: object
+  whitelist.Response:
+    properties:
+      msg:
+        type: string
+    type: object
 info:
   contact: {}
   description: Web Application Firewall By Gin
@@ -45,7 +55,7 @@ paths:
             $ref: '#/definitions/api.ErrorResponse'
       summary: 将IP移除黑名单
       tags:
-      - Auth
+      - IP黑白名单
     post:
       consumes:
       - application/json
@@ -69,5 +79,54 @@ paths:
             $ref: '#/definitions/api.ErrorResponse'
       summary: 添加IP至黑名单
       tags:
-      - Auth
+      - IP黑白名单
+  /whitelist:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: IP信息
+        in: body
+        name: AddIPToWhitelistRequest
+        required: true
+        schema:
+          $ref: '#/definitions/whitelist.AddIPToWhitelistRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/whitelist.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: 将IP移除白名单
+      tags:
+      - IP黑白名单
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: IP信息
+        in: body
+        name: AddIPToWhitelistRequest
+        required: true
+        schema:
+          $ref: '#/definitions/whitelist.AddIPToWhitelistRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/whitelist.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: 添加IP至白名单
+      tags:
+      - IP黑白名单
 swagger: "2.0"

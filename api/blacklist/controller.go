@@ -24,7 +24,7 @@ func NewBlacklistController(service *blacklist.Service) *Controller {
 
 // AddIPToBlacklist godoc
 // @Summary 添加IP至黑名单
-// @Tags Auth
+// @Tags IP黑白名单
 // @Accept json
 // @Produce json
 // @Param AddIPToBlacklistRequest body AddIPToBlacklistRequest true "IP信息"
@@ -47,7 +47,7 @@ func (c *Controller) AddIPToBlacklist(g *gin.Context) {
 
 // RemoveIPFromBlacklist godoc
 // @Summary 将IP移除黑名单
-// @Tags Auth
+// @Tags IP黑白名单
 // @Accept json
 // @Produce json
 // @Param AddIPToBlacklistRequest body AddIPToBlacklistRequest true "IP信息"

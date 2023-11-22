@@ -11,8 +11,8 @@ rateLimiterMode: 1
 
 rateLimiter:
   tokenBucket:
-    maxToken: 10
-    tokenPerSecond: 10
+    maxToken: 3
+    tokenPerSecond: 3
   leakyBucket:
     capacity: 4
     leakyPerSecond: 1

@@ -34,7 +34,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Auth"
+                    "IP黑白名单"
                 ],
                 "summary": "添加IP至黑名单",
                 "parameters": [
@@ -71,7 +71,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Auth"
+                    "IP黑白名单"
                 ],
                 "summary": "将IP移除黑名单",
                 "parameters": [
@@ -90,6 +90,82 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/blacklist.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/whitelist": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "IP黑白名单"
+                ],
+                "summary": "添加IP至白名单",
+                "parameters": [
+                    {
+                        "description": "IP信息",
+                        "name": "AddIPToWhitelistRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/whitelist.AddIPToWhitelistRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/whitelist.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "IP黑白名单"
+                ],
+                "summary": "将IP移除白名单",
+                "parameters": [
+                    {
+                        "description": "IP信息",
+                        "name": "AddIPToWhitelistRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/whitelist.AddIPToWhitelistRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/whitelist.Response"
                         }
                     },
                     "400": {
@@ -120,6 +196,22 @@ var doc = `{
             }
         },
         "blacklist.Response": {
+            "type": "object",
+            "properties": {
+                "msg": {
+                    "type": "string"
+                }
+            }
+        },
+        "whitelist.AddIPToWhitelistRequest": {
+            "type": "object",
+            "properties": {
+                "ip": {
+                    "type": "string"
+                }
+            }
+        },
+        "whitelist.Response": {
             "type": "object",
             "properties": {
                 "msg": {

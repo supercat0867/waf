@@ -4,9 +4,10 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
-	"net/http"
 	"sync"
 	"waf/config"
+	"waf/domain"
+	"waf/utils/api"
 	"waf/utils/rateLimiter"
 )
 
@@ -16,6 +17,11 @@ var ipLimiters = make(map[string]rateLimiter.RateLimiterInterface)
 // RateLimitMiddleware 限速中间件
 func RateLimitMiddleware(config config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// 检查是否为白名单IP
+		if skip, _ := c.Get("isWhitelisted"); skip == true {
+			c.Next()
+			return
+		}
 		// 获取客户端ip
 		clientIP := c.ClientIP()
 		// 给限速实例map加锁
@@ -28,9 +34,7 @@ func RateLimitMiddleware(config config.Config) gin.HandlerFunc {
 		// 解锁
 		ipLimitersMutex.Unlock()
 		if !limiter.Allow() {
-			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
-				"error": "Too Many Request",
-			})
+			api.HandleStatusTooManyRequestsError(c, api.ErrStatusTooManyRequests)
 			return
 		}
 		c.Next()
@@ -39,24 +43,34 @@ func RateLimitMiddleware(config config.Config) gin.HandlerFunc {
 
 var ctx = context.Background()
 
-// BlacklistMiddleware IP黑名单中间件
-func BlacklistMiddleware(rdb *redis.Client) gin.HandlerFunc {
+// IPBlackAndWhiteMiddleware IP黑白名单中间件
+func IPBlackAndWhiteMiddleware(rdb *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 获取客户端ip
 		clientIP := c.ClientIP()
-		// 从 Redis 检查 IP 是否在黑名单中
-		exists, err := rdb.SIsMember(ctx, "blacklist", clientIP).Result()
+		// 检查 IP 是否在黑名单中
+		exists, err := rdb.SIsMember(ctx, domain.IpBlacklistSet, clientIP).Result()
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"error": "Internal server error",
-			})
+			api.HandleInternalServerError(c, api.ErrInternalServer)
+			c.Abort()
 			return
 		}
 		if exists {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "Your IP address is blacklisted",
-			})
+			// 黑名单IP，返回403
+			api.HandleStatusForbiddenError(c, api.ErrStatusForbidden)
+			c.Abort()
 			return
+		}
+		// 检查 IP 是否在白名单中
+		exists, err = rdb.SIsMember(ctx, domain.IpWhitelistSet, clientIP).Result()
+		if err != nil {
+			api.HandleInternalServerError(c, api.ErrInternalServer)
+			c.Abort()
+			return
+		}
+		if exists {
+			// 白名单IP，设置一个白名单IP标识，以便绕过后续中间件
+			c.Set("isWhitelisted", true)
 		}
 		c.Next()
 	}
