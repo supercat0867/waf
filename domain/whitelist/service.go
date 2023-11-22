@@ -32,3 +32,8 @@ func (c *Service) Remove(ip string, ctx context.Context) error {
 	}
 	return nil
 }
+
+// Get 获取白名单IP
+func (c *Service) Get(ctx context.Context) ([]string, error) {
+	return c.r.Get(ctx)
+}

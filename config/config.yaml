@@ -1,6 +1,11 @@
+server: "http://localhost"
+
 port: 8080
 
 proxyServer: "http://localhost:80"
+
+jwtSetting:
+  secretKey: "www.supercat.cc"
 
 redis:
   address: "localhost:6379"

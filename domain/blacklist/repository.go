@@ -50,3 +50,12 @@ func (r *Repository) Add(ip string, ctx context.Context) error {
 func (r *Repository) Remove(ip string, ctx context.Context) error {
 	return r.rdb.SRem(ctx, domain.IpBlacklistSet, ip).Err()
 }
+
+// Get 获取IP黑名单列表
+func (r *Repository) Get(ctx context.Context) ([]string, error) {
+	ips, err := r.rdb.SMembers(ctx, domain.IpBlacklistSet).Result()
+	if err != nil {
+		return nil, err
+	}
+	return ips, nil
+}

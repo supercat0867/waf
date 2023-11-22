@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WAF Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        #blacklistDisplay, #whitelistDisplay {
+            border: 1px solid #ddd;
+            padding: 2px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-4">
+    <h1>WAF Dashboard</h1>
+
+    <!-- 黑名单管理 -->
+    <section id="blacklistManagement" class="mt-4">
+        <h2>IP黑名单</h2>
+        <div class="input-group mb-3">
+            <input type="text" id="blacklistIpInput" class="form-control"
+                   placeholder="输入IP地址或IP段，例如192.168.111.1、192.168.111.0/24">
+            <button class="btn btn-outline-secondary" type="button" id="addBlacklistIp">添加</button>
+            <button class="btn btn-outline-danger" type="button" id="removeBlacklistIp">删除</button>
+        </div>
+        <div id="blacklistDisplay">
+            <ul class="list-group">
+            </ul>
+        </div>
+    </section>
+
+
+    <!-- 白名单管理 -->
+    <section id="whitelistManagement">
+        <h2>IP白名单</h2>
+        <div class="input-group mb-3">
+            <input type="text" id="whitelistIpInput" class="form-control"
+                   placeholder="输入IP地址或IP段，例如192.168.111.1、192.168.111.0/24">
+            <button class="btn btn-outline-secondary" type="button" id="addWhitelistIp">添加</button>
+            <button class="btn btn-outline-danger" type="button" id="removeWhitelistIp">删除</button>
+        </div>
+        <div id="whitelistDisplay">
+            <ul class="list-group">
+            </ul>
+        </div>
+    </section>
+
+    <!--    &lt;!&ndash; 拦截日志 &ndash;&gt;-->
+    <!--    <section id="interceptLogs">-->
+    <!--        <h2>拦截日志</h2>-->
+    <!--        &lt;!&ndash; 日志显示 &ndash;&gt;-->
+    <!--    </section>-->
+
+    <!--    &lt;!&ndash; 图表分析 &ndash;&gt;-->
+    <!--    <section id="chartAnalysis">-->
+    <!--        <h2>图表分析</h2>-->
+    <!--        &lt;!&ndash; 图表显示 &ndash;&gt;-->
+    <!--    </section>-->
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- 在这里添加 JavaScript 代码 -->
+<script>
+    // 页面加载时执行的函数
+    document.addEventListener('DOMContentLoaded', function () {
+        loadBlacklist();
+        loadWhitelist();
+    });
+
+    // 加载黑名单列表
+    function loadBlacklist() {
+        // 从 localStorage 获取 token
+        const token = localStorage.getItem("token");
+
+        // 设置请求头
+        const headers = new Headers();
+        headers.append("Authorization", `${token}`);
+
+        // 发送请求获取黑名单列表
+        fetch('/waf/blacklist', {headers: headers})
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.data) {
+                    updateIpListDisplay(data.data, "blacklistDisplay");
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // 加载白名单列表
+    function loadWhitelist() {
+        // 从 localStorage 获取 token
+        const token = localStorage.getItem("token");
+        // 设置请求头
+        const headers = new Headers();
+        headers.append("Authorization", `${token}`);
+        // 发送请求获取黑名单列表
+        fetch('/waf/whitelist', {headers: headers})
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.data) {
+                    updateIpListDisplay(data.data, "whitelistDisplay");
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // 更新IP显示
+    function updateIpListDisplay(ips, type) {
+        const blacklistDisplay = document.getElementById(type);
+        const listGroup = document.createElement('ul');
+        listGroup.className = 'list-group';
+
+        ips.forEach(ip => {
+            const listItem = document.createElement('li');
+            listItem.className = 'list-group-item';
+            listItem.textContent = ip;
+            listGroup.appendChild(listItem);
+        });
+
+        // 清除旧的内容并添加新的列表
+        blacklistDisplay.innerHTML = '';
+        blacklistDisplay.appendChild(listGroup);
+    }
+
+    document.getElementById("addBlacklistIp").onclick = function () {
+        const ip = document.getElementById("blacklistIpInput").value;
+        sendBlacklistRequest(ip, 'POST');
+    };
+
+    document.getElementById("removeBlacklistIp").onclick = function () {
+        const ip = document.getElementById("blacklistIpInput").value;
+        sendBlacklistRequest(ip, 'DELETE');
+    };
+
+    document.getElementById("addWhitelistIp").onclick = function () {
+        const ip = document.getElementById("whitelistIpInput").value;
+        sendWhitelistRequest(ip, 'POST');
+    };
+
+    document.getElementById("removeWhitelistIp").onclick = function () {
+        const ip = document.getElementById("whitelistIpInput").value;
+        sendWhitelistRequest(ip, 'DELETE');
+    };
+
+    function sendBlacklistRequest(ip, method) {
+        // 从 localStorage 获取 token
+        const token = localStorage.getItem("token");
+
+        // 设置请求头
+        const headers = new Headers({
+            "Content-Type": "application/json",
+            "Authorization": `${token}`
+        });
+
+        // 发送请求
+        fetch('/waf/blacklist', {
+            method: method,
+            headers: headers,
+            body: JSON.stringify({ip: ip})
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.msg || 'Unknown error occurred');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert(data.msg);
+                loadBlacklist();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(error.message);
+            });
+    }
+
+    function sendWhitelistRequest(ip, method) {
+        // 从 localStorage 获取 token
+        const token = localStorage.getItem("token");
+
+        // 设置请求头
+        const headers = new Headers({
+            "Content-Type": "application/json",
+            "Authorization": `${token}`
+        });
+
+        // 发送请求
+        fetch('/waf/whitelist', {
+            method: method,
+            headers: headers,
+            body: JSON.stringify({ip: ip})
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.msg || 'Unknown error occurred');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert(data.msg);
+                loadWhitelist();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(error.message);
+            });
+    }
+</script>
+
+</body>
+</html>

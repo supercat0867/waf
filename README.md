@@ -7,7 +7,7 @@
 
 ### 需求产生
 
-在实习做业务开发的时候经常会花费一些时间写一些安全中间件，现在临近大学毕业，正好选题也在这个方向，尝试自己实现一个waf用于后续业务开发，顺便完成毕业设计。预计功能参考：[https://github.com/unixhot/waf](https://github.com/unixhot/waf)
+在实习做业务开发的时候经常会花费一些时间写一些安全中间件，现在临近大学毕业，正好选题也在这个方向，尝试自己实现一个waf用于后续业务开发，顺便完成毕业设计。预计功能参考：[https://github.com/bukaleyang/zhongkui-waf](https://github.com/bukaleyang/zhongkui-waf)
 
 ### 目前功能列表：
 
@@ -22,13 +22,16 @@
 ```
 git clone https://github.com/supercat0867/waf
 ```
+
 2. 进入根目录，安装依赖，编译
+
 ```
 go mod download
 go build
 ```
+
 3. 编辑配置信息\
-配置文件为config目录下的config.yaml，可以根据需求更改，用途参考变量名
+   配置文件为config目录下的config.yaml，可以根据需求更改，用途参考变量名
 
 4. 运行
 

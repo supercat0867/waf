@@ -16,6 +16,7 @@ import (
 	"waf/utils/database"
 	"waf/utils/graceful"
 	"waf/utils/middleware"
+	"waf/web"
 )
 
 // @title WAF
@@ -35,6 +36,8 @@ func main() {
 
 	// 注册API路由
 	api.RegisterHandlers(r)
+	// 注册web路由
+	web.RegisterHandle(r)
 
 	// API文档
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -79,8 +82,9 @@ func main() {
     '---"       '--''---'     '--'
 	`
 
-	log.Println("WAF启动成功")
 	fmt.Println(wafAsciiArt)
+	fmt.Printf("WAF后台地址：%s:%d/waf/login\n", config.Server, config.Port)
+	fmt.Println("初始账户：admin\n初始密码：123456")
 
 	graceful.ShutdownGin(srv, time.Second*3)
 }

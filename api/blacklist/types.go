@@ -7,3 +7,7 @@ type AddIPToBlacklistRequest struct {
 type Response struct {
 	Message string `json:"msg"`
 }
+
+type IpResponse struct {
+	Data []string `json:"data"`
+}

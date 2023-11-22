@@ -7,9 +7,13 @@ import (
 
 // Config 配置信息
 type Config struct {
-	Port            int    `yaml:"port"`
-	ProxyServer     string `yaml:"proxyServer"`
-	RateLimiterMode int    `yaml:"rateLimiterMode"`
+	Server      string `yaml:"server"`
+	Port        int    `yaml:"port"`
+	ProxyServer string `yaml:"proxyServer"`
+	JwtSetting  struct {
+		SecretKey string `yaml:"secretKey"`
+	} `yaml:"jwtSetting"`
+	RateLimiterMode int `yaml:"rateLimiterMode"`
 	RateLimiter     struct {
 		TokenBucket struct {
 			MaxToken       int `yaml:"maxToken"`
