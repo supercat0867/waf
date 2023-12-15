@@ -8,9 +8,9 @@ type ErrorResponse struct {
 }
 
 var (
-	ErrInvalidBody           = errors.New("invalid body error")
+	ErrInvalidBody           = errors.New("invalid body")
 	ErrInternalServer        = errors.New("internal server error")
-	ErrStatusForbidden       = errors.New("access denied")
-	ErrStatusTooManyRequests = errors.New("too Many Request")
-	ErrJwtGenerate           = errors.New("jwt generate error")
+	ErrStatusForbidden       = errors.New("访问被拒绝")
+	ErrStatusTooManyRequests = errors.New("请求太频繁")
+	ErrJwtGenerate           = errors.New("JWT生成错误")
 )

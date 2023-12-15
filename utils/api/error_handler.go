@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 )
 
@@ -14,7 +15,8 @@ func HandleError(c *gin.Context, err error) {
 
 // HandleInternalServerError 500错误处理
 func HandleInternalServerError(c *gin.Context, err error) {
-	c.JSON(http.StatusInternalServerError, ErrorResponse{Message: err.Error()})
+	log.Printf("server err :%v\n", err)
+	c.JSON(http.StatusInternalServerError, ErrorResponse{Message: ErrInternalServer.Error()})
 	c.Abort()
 	return
 }

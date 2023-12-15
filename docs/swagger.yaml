@@ -6,19 +6,43 @@ definitions:
     type: object
   blacklist.AddIPToBlacklistRequest:
     properties:
+      exp:
+        description: 过期时间
+        type: integer
       ip:
+        description: IP地址
         type: string
     type: object
-  blacklist.IpResponse:
+  blacklist.IpListResponse:
     properties:
+      count:
+        type: integer
       data:
         items:
-          type: string
+          $ref: '#/definitions/domain.IpInfo'
         type: array
+      msg:
+        type: string
+      status:
+        type: integer
+    type: object
+  blacklist.RemoveIPTiBlacklistRequest:
+    properties:
+      ip:
+        type: string
     type: object
   blacklist.Response:
     properties:
       msg:
+        type: string
+      status:
+        type: integer
+    type: object
+  domain.IpInfo:
+    properties:
+      exp:
+        type: string
+      ip:
         type: string
     type: object
   user.ChangePasswordRequest:
@@ -67,20 +91,37 @@ definitions:
     type: object
   whitelist.AddIPToWhitelistRequest:
     properties:
+      exp:
+        description: 过期时间
+        type: integer
       ip:
+        description: IP地址
         type: string
     type: object
-  whitelist.IpResponse:
+  whitelist.IpListResponse:
     properties:
+      count:
+        type: integer
       data:
         items:
-          type: string
+          $ref: '#/definitions/domain.IpInfo'
         type: array
+      msg:
+        type: string
+      status:
+        type: integer
+    type: object
+  whitelist.RemoveIPTiWhitelistRequest:
+    properties:
+      ip:
+        type: string
     type: object
   whitelist.Response:
     properties:
       msg:
         type: string
+      status:
+        type: integer
     type: object
 info:
   contact: {}
@@ -101,10 +142,10 @@ paths:
         type: string
       - description: IP信息
         in: body
-        name: AddIPToBlacklistRequest
+        name: RemoveIPTiBlacklistRequest
         required: true
         schema:
-          $ref: '#/definitions/blacklist.AddIPToBlacklistRequest'
+          $ref: '#/definitions/blacklist.RemoveIPTiBlacklistRequest'
       produces:
       - application/json
       responses:
@@ -134,9 +175,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/blacklist.IpResponse'
-        "400":
-          description: Bad Request
+            $ref: '#/definitions/blacklist.IpListResponse'
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/api.ErrorResponse'
       summary: 获取黑名单列表
@@ -160,8 +201,8 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
             $ref: '#/definitions/blacklist.Response'
         "400":
@@ -261,10 +302,10 @@ paths:
         type: string
       - description: IP信息
         in: body
-        name: AddIPToWhitelistRequest
+        name: RemoveIPTiWhitelistRequest
         required: true
         schema:
-          $ref: '#/definitions/whitelist.AddIPToWhitelistRequest'
+          $ref: '#/definitions/whitelist.RemoveIPTiWhitelistRequest'
       produces:
       - application/json
       responses:
@@ -294,9 +335,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/whitelist.IpResponse'
-        "400":
-          description: Bad Request
+            $ref: '#/definitions/whitelist.IpListResponse'
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/api.ErrorResponse'
       summary: 获取白名单列表

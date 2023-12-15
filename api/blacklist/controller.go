@@ -1,15 +1,13 @@
 package blacklist
 
 import (
-	"context"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"time"
 	"waf/domain/blacklist"
 	"waf/utils/api"
 	"waf/utils/validator"
 )
-
-var ctx = context.Background()
 
 // Controller 黑名单控制器
 type Controller struct {
@@ -30,7 +28,7 @@ func NewBlacklistController(service *blacklist.Service) *Controller {
 // @Produce json
 // @Param Authorization header string true "Authorization header"
 // @Param AddIPToBlacklistRequest body AddIPToBlacklistRequest true "IP信息"
-// @Success 201 {object} Response
+// @Success 200 {object} Response
 // @Failure 400 {object} api.ErrorResponse
 // @Router /waf/blacklist [post]
 func (c *Controller) AddIPToBlacklist(g *gin.Context) {
@@ -43,12 +41,16 @@ func (c *Controller) AddIPToBlacklist(g *gin.Context) {
 		api.HandleError(g, api.ErrInvalidBody)
 		return
 	}
-	err := c.blacklistService.Add(req.IP, ctx)
+
+	// 将秒数转换为 time.Duration
+	expiryDuration := time.Duration(req.Expiry) * time.Second
+
+	err := c.blacklistService.Add(req.IP, expiryDuration)
 	if err != nil {
-		api.HandleError(g, err)
+		api.HandleInternalServerError(g, err)
 		return
 	}
-	g.JSON(http.StatusCreated, Response{Message: "success"})
+	g.JSON(http.StatusOK, Response{Status: 200, Message: "success"})
 }
 
 // RemoveIPFromBlacklist godoc
@@ -57,12 +59,12 @@ func (c *Controller) AddIPToBlacklist(g *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "Authorization header"
-// @Param AddIPToBlacklistRequest body AddIPToBlacklistRequest true "IP信息"
+// @Param RemoveIPTiBlacklistRequest body RemoveIPTiBlacklistRequest true "IP信息"
 // @Success 200 {object} Response
 // @Failure 400 {object} api.ErrorResponse
 // @Router /waf/blacklist [delete]
 func (c *Controller) RemoveIPFromBlacklist(g *gin.Context) {
-	var req AddIPToBlacklistRequest
+	var req RemoveIPTiBlacklistRequest
 	if err := g.ShouldBind(&req); err != nil {
 		api.HandleError(g, api.ErrInvalidBody)
 		return
@@ -71,12 +73,12 @@ func (c *Controller) RemoveIPFromBlacklist(g *gin.Context) {
 		api.HandleError(g, api.ErrInvalidBody)
 		return
 	}
-	err := c.blacklistService.Remove(req.IP, ctx)
+	err := c.blacklistService.Remove(req.IP)
 	if err != nil {
-		api.HandleError(g, err)
+		api.HandleInternalServerError(g, err)
 		return
 	}
-	g.JSON(http.StatusOK, Response{Message: "success"})
+	g.JSON(http.StatusOK, Response{Status: 200, Message: "success"})
 }
 
 // GetIps godoc
@@ -85,14 +87,21 @@ func (c *Controller) RemoveIPFromBlacklist(g *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "Authorization header"
-// @Success 200 {object} IpResponse
-// @Failure 400 {object} api.ErrorResponse
+// @Success 200 {object} IpListResponse
+// @Failure 500 {object} api.ErrorResponse
 // @Router /waf/blacklist [get]
 func (c *Controller) GetIps(g *gin.Context) {
-	ips, err := c.blacklistService.Get(ctx)
+	ips, err := c.blacklistService.Get()
 	if err != nil {
-		api.HandleError(g, api.ErrInvalidBody)
+		api.HandleInternalServerError(g, err)
 		return
 	}
-	g.JSON(http.StatusOK, IpResponse{Data: ips})
+	resp := IpListResponse{
+		Status:  200,
+		Count:   len(ips),
+		Message: "success",
+		Data:    ips,
+	}
+
+	g.JSON(http.StatusOK, resp)
 }

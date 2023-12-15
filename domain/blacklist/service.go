@@ -1,6 +1,9 @@
 package blacklist
 
-import "context"
+import (
+	"time"
+	"waf/domain"
+)
 
 // Service 黑名单服务
 type Service struct {
@@ -8,16 +11,15 @@ type Service struct {
 }
 
 // NewBlacklistService 实例化黑名单服务
-func NewBlacklistService(r Repository, ctx context.Context) *Service {
-	r.EnsureBlacklistExists(ctx)
+func NewBlacklistService(r Repository) *Service {
 	return &Service{
 		r: r,
 	}
 }
 
 // Add 添加IP至黑名单
-func (c *Service) Add(ip string, ctx context.Context) error {
-	err := c.r.Add(ip, ctx)
+func (c *Service) Add(ip string, exp time.Duration) error {
+	err := c.r.Add(ip, exp)
 	if err != nil {
 		return ErrIpAdd
 	}
@@ -25,15 +27,15 @@ func (c *Service) Add(ip string, ctx context.Context) error {
 }
 
 // Remove 移除黑名单IP
-func (c *Service) Remove(ip string, ctx context.Context) error {
-	err := c.r.Remove(ip, ctx)
+func (c *Service) Remove(ip string) error {
+	err := c.r.Remove(ip)
 	if err != nil {
 		return ErrIpRemove
 	}
 	return nil
 }
 
-// Get 获取黑名单IP
-func (c *Service) Get(ctx context.Context) ([]string, error) {
-	return c.r.Get(ctx)
+// Get 获取IP黑名单列表
+func (c *Service) Get() ([]domain.IpInfo, error) {
+	return c.r.Get()
 }

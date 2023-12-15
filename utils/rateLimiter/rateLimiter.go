@@ -1,17 +1,28 @@
 package rateLimiter
 
 import (
+	"github.com/go-redis/redis/v8"
+	"golang.org/x/net/context"
 	"time"
 	"waf/config"
+	"waf/domain"
 )
 
 // RateLimiterInterface 限速接口
 type RateLimiterInterface interface {
-	Allow() bool
+	Allow(rdb *redis.Client, ip string) bool
 }
 
 // Allow 令牌桶算法
-func (rl *TokenBucket) Allow() bool {
+func (rl *TokenBucket) Allow(rdb *redis.Client, ip string) bool {
+	// 检查计数器是否超过配置值
+	if checkCounterIsOver(rl.Counter) {
+		// 将IP加入黑名单
+		err := AddIpToBlackList(rdb, ip)
+		if err != nil {
+			return false
+		}
+	}
 	// 使用互斥锁守护线程
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
@@ -29,6 +40,7 @@ func (rl *TokenBucket) Allow() bool {
 	}
 	// 当前无令牌，返回false拒绝请求
 	if rl.Tokens < 1 {
+		rl.Counter++
 		return false
 	}
 	// 执行到这里说明至少存在一个令牌，令牌减1，返回true允许访问
@@ -37,7 +49,15 @@ func (rl *TokenBucket) Allow() bool {
 }
 
 // Allow 漏桶算法
-func (rl *LeakyBucket) Allow() bool {
+func (rl *LeakyBucket) Allow(rdb *redis.Client, ip string) bool {
+	// 检查计数器是否超过配置值
+	if checkCounterIsOver(rl.Counter) {
+		// 将IP加入黑名单
+		err := AddIpToBlackList(rdb, ip)
+		if err != nil {
+			return false
+		}
+	}
 	// 使用互斥锁守护线程
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
@@ -63,11 +83,20 @@ func (rl *LeakyBucket) Allow() bool {
 		return true
 	}
 	// 桶已装满水，返回false拒绝请求
+	rl.Counter++
 	return false
 }
 
 // Allow 固定窗口算法
-func (rl *FixedWindow) Allow() bool {
+func (rl *FixedWindow) Allow(rdb *redis.Client, ip string) bool {
+	// 检查计数器是否超过配置值
+	if checkCounterIsOver(rl.Counter) {
+		// 将IP加入黑名单
+		err := AddIpToBlackList(rdb, ip)
+		if err != nil {
+			return false
+		}
+	}
 	// 使用互斥锁守护线程
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
@@ -84,11 +113,20 @@ func (rl *FixedWindow) Allow() bool {
 	}
 	// 请求量加1，返回true
 	rl.requests++
+	rl.Counter++
 	return true
 }
 
 // Allow 滑动窗口算法
-func (rl *SlidingWindow) Allow() bool {
+func (rl *SlidingWindow) Allow(rdb *redis.Client, ip string) bool {
+	// 检查计数器是否超过配置值
+	if checkCounterIsOver(rl.Counter) {
+		// 将IP加入黑名单
+		err := AddIpToBlackList(rdb, ip)
+		if err != nil {
+			return false
+		}
+	}
 	// 使用互斥锁守护线程
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
@@ -105,6 +143,7 @@ func (rl *SlidingWindow) Allow() bool {
 	rl.timestamps = newTimestamps
 	// 判断当前请求是否应被允许，如果时间戳队列长度大于最大请求量返回false
 	if len(rl.timestamps) >= rl.MaxReq {
+		rl.Counter++
 		return false
 	}
 	// 将当前时间戳加入时间戳队列
@@ -122,6 +161,7 @@ func NewRateLimiter(config config.Config) RateLimiterInterface {
 			TokensPerSecond: config.RateLimiter.TokenBucket.TokenPerSecond,
 			Tokens:          config.RateLimiter.TokenBucket.MaxToken,
 			LastTime:        time.Now(),
+			Counter:         0,
 		}
 	case 2:
 		return &LeakyBucket{
@@ -129,17 +169,20 @@ func NewRateLimiter(config config.Config) RateLimiterInterface {
 			Remaining:    0,
 			LeakInterval: time.Second / time.Duration(config.RateLimiter.LeakyBucket.LeakyPerSecond),
 			LastLeakTime: time.Now(),
+			Counter:      0,
 		}
 	case 3:
 		return &FixedWindow{
 			WindowStart: time.Now(),
 			MaxRequests: config.RateLimiter.FixedWindow.MaxRequests,
 			WindowSize:  time.Duration(config.RateLimiter.FixedWindow.MaxRequests) * time.Second,
+			Counter:     0,
 		}
 	case 4:
 		return &SlidingWindow{
-			Window: time.Duration(config.RateLimiter.SlideWindow.WindowSize) * time.Second,
-			MaxReq: config.RateLimiter.SlideWindow.MaxRequests,
+			Window:  time.Duration(config.RateLimiter.SlideWindow.WindowSize) * time.Second,
+			MaxReq:  config.RateLimiter.SlideWindow.MaxRequests,
+			Counter: 0,
 		}
 	default:
 		return &TokenBucket{
@@ -147,6 +190,25 @@ func NewRateLimiter(config config.Config) RateLimiterInterface {
 			TokensPerSecond: 15,
 			Tokens:          15,
 			LastTime:        time.Now(),
+			Counter:         0,
 		}
 	}
+}
+
+// 检查计数器是否超过配置值，超过将IP放入黑名单
+func checkCounterIsOver(counter int) bool {
+	if counter > config.Cfg.RateLimiter.MaxCounter {
+		return true
+	}
+	return false
+}
+
+var ctx = context.Background()
+
+// AddIpToBlackList 添加IP至黑名单
+func AddIpToBlackList(rdb *redis.Client, ip string) error {
+	// 为每个IP地址设置独立的键
+	key := domain.IpBlacklist + ":" + ip
+	// 添加 IP 至黑名单，无过期时间
+	return rdb.Set(ctx, key, "true", 0).Err()
 }

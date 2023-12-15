@@ -50,11 +50,11 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/blacklist.IpResponse"
+                            "$ref": "#/definitions/blacklist.IpListResponse"
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/api.ErrorResponse"
                         }
@@ -91,8 +91,8 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/blacklist.Response"
                         }
@@ -126,11 +126,11 @@ var doc = `{
                     },
                     {
                         "description": "IP信息",
-                        "name": "AddIPToBlacklistRequest",
+                        "name": "RemoveIPTiBlacklistRequest",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/blacklist.AddIPToBlacklistRequest"
+                            "$ref": "#/definitions/blacklist.RemoveIPTiBlacklistRequest"
                         }
                     }
                 ],
@@ -295,11 +295,11 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/whitelist.IpResponse"
+                            "$ref": "#/definitions/whitelist.IpListResponse"
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/api.ErrorResponse"
                         }
@@ -371,11 +371,11 @@ var doc = `{
                     },
                     {
                         "description": "IP信息",
-                        "name": "AddIPToWhitelistRequest",
+                        "name": "RemoveIPTiWhitelistRequest",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/whitelist.AddIPToWhitelistRequest"
+                            "$ref": "#/definitions/whitelist.RemoveIPTiWhitelistRequest"
                         }
                     }
                 ],
@@ -408,19 +408,41 @@ var doc = `{
         "blacklist.AddIPToBlacklistRequest": {
             "type": "object",
             "properties": {
+                "exp": {
+                    "description": "过期时间",
+                    "type": "integer"
+                },
                 "ip": {
+                    "description": "IP地址",
                     "type": "string"
                 }
             }
         },
-        "blacklist.IpResponse": {
+        "blacklist.IpListResponse": {
             "type": "object",
             "properties": {
+                "count": {
+                    "type": "integer"
+                },
                 "data": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/domain.IpInfo"
                     }
+                },
+                "msg": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "blacklist.RemoveIPTiBlacklistRequest": {
+            "type": "object",
+            "properties": {
+                "ip": {
+                    "type": "string"
                 }
             }
         },
@@ -428,6 +450,20 @@ var doc = `{
             "type": "object",
             "properties": {
                 "msg": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "domain.IpInfo": {
+            "type": "object",
+            "properties": {
+                "exp": {
+                    "type": "string"
+                },
+                "ip": {
                     "type": "string"
                 }
             }
@@ -504,19 +540,41 @@ var doc = `{
         "whitelist.AddIPToWhitelistRequest": {
             "type": "object",
             "properties": {
+                "exp": {
+                    "description": "过期时间",
+                    "type": "integer"
+                },
                 "ip": {
+                    "description": "IP地址",
                     "type": "string"
                 }
             }
         },
-        "whitelist.IpResponse": {
+        "whitelist.IpListResponse": {
             "type": "object",
             "properties": {
+                "count": {
+                    "type": "integer"
+                },
                 "data": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/domain.IpInfo"
                     }
+                },
+                "msg": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "whitelist.RemoveIPTiWhitelistRequest": {
+            "type": "object",
+            "properties": {
+                "ip": {
+                    "type": "string"
                 }
             }
         },
@@ -525,6 +583,9 @@ var doc = `{
             "properties": {
                 "msg": {
                     "type": "string"
+                },
+                "status": {
+                    "type": "integer"
                 }
             }
         }

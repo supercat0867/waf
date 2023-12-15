@@ -15,16 +15,17 @@ redis:
 rateLimiterMode: 1
 
 rateLimiter:
+  maxCounter: 3
   tokenBucket:
     maxToken: 3
-    tokenPerSecond: 3
+    tokenPerSecond: 1
   leakyBucket:
-    capacity: 4
-    leakyPerSecond: 1
+    capacity: 30
+    leakyPerSecond: 10
   fixedWindow:
-    windowSize: 2
-    maxRequests: 5
+    windowSize: 1
+    maxRequests: 20
   slideWindow:
-    windowSize: 2
-    maxRequests: 5
+    windowSize: 1
+    maxRequests: 10
 

@@ -32,10 +32,10 @@ func CreateDBs() *Databases {
 	AppConfig = config
 	rdb := database.NewRedisDB(config)
 	db := database.NewSqliteDB()
-
+	ctx := context.Background()
 	return &Databases{
-		BlacklistRepository: blacklist.NewBlacklistRepository(rdb),
-		WhitelistRepository: whitelist.NewWhitelistRepository(rdb),
+		BlacklistRepository: blacklist.NewBlacklistRepository(rdb, ctx),
+		WhitelistRepository: whitelist.NewWhitelistRepository(rdb, ctx),
 		UserRepository:      user.NewUserRepository(db),
 	}
 
@@ -51,7 +51,7 @@ func RegisterHandlers(r *gin.Engine) {
 
 // RegisterBlackListHandlers 注册黑名单控制器
 func RegisterBlackListHandlers(r *gin.Engine, dbs Databases) {
-	blacklistService := blacklist.NewBlacklistService(*dbs.BlacklistRepository, context.Background())
+	blacklistService := blacklist.NewBlacklistService(*dbs.BlacklistRepository)
 	blacklistController := blacklistApi.NewBlacklistController(blacklistService)
 	blacklistGroup := r.Group("/waf")
 	blacklistGroup.POST("blacklist", middleware.AuthUserMiddleware(AppConfig.JwtSetting.SecretKey), blacklistController.AddIPToBlacklist)
@@ -61,7 +61,7 @@ func RegisterBlackListHandlers(r *gin.Engine, dbs Databases) {
 
 // RegisterWhiteListHandlers 注册白名单控制器
 func RegisterWhiteListHandlers(r *gin.Engine, dbs Databases) {
-	whitelistService := whitelist.NewWhitelistService(*dbs.WhitelistRepository, context.Background())
+	whitelistService := whitelist.NewWhitelistService(*dbs.WhitelistRepository)
 	whitelistController := whitelistApi.NewWhitelistController(whitelistService)
 	whitelistGroup := r.Group("/waf")
 	whitelistGroup.POST("whitelist", middleware.AuthUserMiddleware(AppConfig.JwtSetting.SecretKey), whitelistController.AddIPToWhitelist)
